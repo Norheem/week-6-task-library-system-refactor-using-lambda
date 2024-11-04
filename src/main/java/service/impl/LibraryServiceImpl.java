@@ -94,18 +94,15 @@ public class LibraryServiceImpl implements LibraryService {
     @Override
     public String giveBook(Librarian librarian, int bookId, String bookTitle) {
         try {
-            // Check that the queue is not empty and retrieve the next person in line
             Queue<Person> theQueue = Optional.ofNullable(library)
                     .map(Library::getPersonOnQueue)
                     .filter(queue -> !queue.isEmpty())
                     .orElseThrow(() -> new IllegalStateException("No one is at the library to borrow the book."));
 
-            // Get the list of books with the given title and find a matching available book
             List<Book> listOfBooksInLibrary = Optional.ofNullable(library)
                     .map(lib -> lib.getBookOnShelf().get(bookTitle))
                     .orElse(List.of());
 
-            // Find a book by ID that has copies available
             Book availableBook = listOfBooksInLibrary.stream()
                     .filter(book -> book.getId() == bookId && book.getCopies() > 0)
                     .findFirst()
@@ -113,13 +110,10 @@ public class LibraryServiceImpl implements LibraryService {
                             "Book with ID " + bookId + " and title " + bookTitle + " is either not available or all copies are borrowed."
                     ));
 
-            // Poll the next person from the queue
-            Person nextPersonOnQueue = theQueue.poll();
 
-            // Remove a copy from the available book
+            Person nextPersonOnQueue = theQueue.poll();
             new BookServiceImpl().removeCopy(availableBook);
 
-            // Return the success message
             return String.format("Book ID: %d with title '%s' has been given to %s %s, the %s, by %s %s, the %s.",
                     bookId,
                     availableBook.getBookTitle(),
